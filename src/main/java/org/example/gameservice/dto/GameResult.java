@@ -1,4 +1,4 @@
-package org.example.gameservice.controller;
+package org.example.gameservice.dto;
 
 import java.util.List;
 

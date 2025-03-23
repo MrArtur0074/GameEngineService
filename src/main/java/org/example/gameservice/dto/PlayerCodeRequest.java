@@ -1,6 +1,6 @@
-package org.example.gameservice.controller;
+package org.example.gameservice.dto;
 
-class PlayerCodeRequest {
+public class PlayerCodeRequest {
     private String player1;
     private String store1;
     private String player2;
