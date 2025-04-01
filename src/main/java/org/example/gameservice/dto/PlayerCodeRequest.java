@@ -5,6 +5,7 @@ public class PlayerCodeRequest {
     private String store1;
     private String player2;
     private String store2;
+    private int[][] map;
 
     public String getPlayer1() {
         return player1;
@@ -36,5 +37,9 @@ public class PlayerCodeRequest {
 
     public void setStore2(String store2) {
         this.store2 = store2;
+    }
+
+    public int[][] getMap() {
+        return map;
     }
 }

@@ -19,18 +19,17 @@ public class GameEngine {
     public static final int FOOD = 3;
     public static final int PLAYER_1 = 2;
     public static final int PLAYER_2 = 4;
+    public static final int outOfBoundsValue = 9;
     private static final String MAP_FILE = "src/main/resources/game_map.json";
     private static ObjectMapper objectMapper = new ObjectMapper();
     private static final int MAX_MOVES = 100;
     private Player player1 = new Player(1, PLAYER_1);
     private Player player2 = new Player(2, PLAYER_2);
 
-    public GameResult calculateGame() {
+    public GameResult calculateGame(int[][] gameMap) {
         try {
-            Map<String, Object> gameData = objectMapper.readValue(new File(MAP_FILE), Map.class);
-            int[][] map = objectMapper.convertValue(gameData.get("map"), int[][].class);
-            int playerMoves = (int) gameData.get("player_moves");
-            int amountFood = (int) gameData.get("amount_food");
+            int[][] map = gameMap;
+            int playerMoves = 0;
 
             Random random = new Random();
             boolean player1Starts = random.nextBoolean();
@@ -50,7 +49,6 @@ public class GameEngine {
             Object store1 = store1Class.getDeclaredConstructor().newInstance();
             Object store2 = store2Class.getDeclaredConstructor().newInstance();
 
-            // Получаем методы movePlayer
             Method movePlayerMethod1 = player1Class.getMethod("movePlayer", int[][].class, store1Class);
             Method movePlayerMethod2 = player2Class.getMethod("movePlayer", int[][].class, store2Class);
 
@@ -59,8 +57,10 @@ public class GameEngine {
                     if (player1Starts) {
                         try {
                             Object player1Instance = player1Class.getDeclaredConstructor().newInstance();
-                            MoveResult result1 = (MoveResult) movePlayerMethod1.invoke(player1Instance, map, store1);
+                            int[][] newMap = calculateMapArea(map, this.player1);
+                            MoveResult result1 = (MoveResult) movePlayerMethod1.invoke(player1Instance, newMap, store1);
                             updateMap(map, result1.getDirection(), this.player1);
+                            result1.setDirection(checkMove(result1.getDirection()));
                             store1 = result1.getStore();
                             moves1.add(result1.getDirection());
                         } catch (Exception e) {
@@ -70,8 +70,10 @@ public class GameEngine {
                     } else {
                         try {
                             Object player2Instance = player2Class.getDeclaredConstructor().newInstance();
-                            MoveResult result2 = (MoveResult) movePlayerMethod2.invoke(player2Instance, map, store2);
+                            int[][] newMap = calculateMapArea(map, this.player2);
+                            MoveResult result2 = (MoveResult) movePlayerMethod2.invoke(player2Instance, newMap, store2);
                             updateMap(map, result2.getDirection(), this.player2);
+                            result2.setDirection(checkMove(result2.getDirection()));
                             store2 = result2.getStore();
                             moves2.add(result2.getDirection());
                         } catch (Exception e) {
@@ -122,6 +124,8 @@ public class GameEngine {
 
         int newX = playerX, newY = playerY;
 
+        direction = direction.toLowerCase();
+
         switch (direction) {
             case "left": newY--; break;
             case "right": newY++; break;
@@ -136,5 +140,53 @@ public class GameEngine {
             map[playerX][playerY] = 0;
             map[newX][newY] = player.getPlayerSymbol();
         }
+    }
+
+    private static int[][] calculateMapArea(int[][] map, Player player) {
+        int rows = map.length;
+        int cols = map[0].length;
+        int playerX = -1, playerY = -1;
+
+        outerLoop:
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (map[i][j] == player.getPlayerSymbol()) {
+                    playerX = i;
+                    playerY = j;
+                    break outerLoop;
+                }
+            }
+        }
+
+        if (playerX == -1) return null;
+
+        int[][] result = new int[5][5];
+
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                int mapX = playerX + i - 2;
+                int mapY = playerY + j - 2;
+
+                if (mapX < 0 || mapX >= rows || mapY < 0 || mapY >= cols) {
+                    result[i][j] = outOfBoundsValue;
+                } else {
+                    result[i][j] = map[mapX][mapY];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static String checkMove(String move) {
+        if (move == null) {
+            return null;
+        }
+        move = move.toLowerCase();
+
+        return switch (move) {
+            case "left", "right", "top", "bottom" -> move;
+            default -> null;
+        };
     }
 }

@@ -23,6 +23,12 @@ public class CompilationService {
             String file3 = saveCodeToFile(fixBraces(request.getPlayer2()), "Player2");
             String file4 = saveCodeToFile(fixBraces(request.getStore2()), "Store2");
 
+            int[][] gameMap = request.getMap();
+
+            if (gameMap == null || gameMap.length == 0 || gameMap[0].length == 0) {
+                throw new IllegalArgumentException("Карта не может быть пустой");
+            }
+
             boolean success2 = compileJavaFile(file2);
             boolean success4 = compileJavaFile(file4);
             boolean success1 = false;
@@ -38,7 +44,7 @@ public class CompilationService {
 
             if (player1Compiled && player2Compiled) {
                 GameEngine gameEngine = new GameEngine();
-                GameResult result = gameEngine.calculateGame();
+                GameResult result = gameEngine.calculateGame(gameMap);
                 return result;
             } else if (player1Compiled) {
                 return new GameResult(
@@ -81,6 +87,16 @@ public class CompilationService {
                     "N/A",
                     "Ошибка при обработке кода: " + e.getMessage()
             ));
+        } catch (IllegalArgumentException e) {
+            return new GameResult(
+                    "draw",
+                    0,
+                    0,
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    "N/A",
+                    "Ошибка валидации карты: " + e.getMessage()
+            );
         } finally {
             resetFiles(new String[]{"Player1.java", "Store1.java", "Player2.java", "Store2.java"}, CODE_DIRECTORY);
             resetFiles(new String[]{"Player1.class", "Store1.class", "Player2.class", "Store2.class"}, CLASS_OUTPUT_DIR_2);

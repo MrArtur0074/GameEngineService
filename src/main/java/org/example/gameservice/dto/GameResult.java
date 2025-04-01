@@ -45,4 +45,8 @@ public class GameResult {
     public String getFirstPlayer() {
         return firstPlayer;
     }
+
+    public String getMessage() {
+        return message;
+    }
 }

@@ -1,7 +1,7 @@
 package org.example.gameservice.player_codes;
 
 public class MoveResult {
-    private final String direction;
+    private String direction;
     private final Object store;
 
     public MoveResult(String direction, Object store) {
@@ -15,5 +15,9 @@ public class MoveResult {
 
     public Object getStore() {
         return store;
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
     }
 }
